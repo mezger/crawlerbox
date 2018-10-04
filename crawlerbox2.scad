@@ -1,27 +1,56 @@
-/*
+/* 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 crawlerbox mit Kabeldurchführung und Dichtgummi
 l, b und h sind Innenmaße, die Box wird entsprechend größer
-Beim Deckel sind die gleichen Maße wie bei der Box anzugeben damit er passt.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 
-$fn=50;
+/* =================================================== */
+/* Parameter für individuelle Box, hier anpassen */
+
+//Innenlänge, d.h Länge des Inhalts. Die Box wird wegen Dichtung und Deckelbefestigung entsprechend länger
+l=41;
+
+// Innenbreite, d.h Breite des Inhalts
+b=20;
+
+// Innenhöhe, d.h Höhe des Inhalts
+h=17;
+
+//Wandstärke einfache Wand, also Boden, Seitenwände, etc.
 wand=1.2;
+
+//Durchmesser der Moosgummidichtung
 gummi=3;
 
-crawlerbox(45, 22, 22);
-translate([0,-50,0]) 
-    crawlerboxdeckel(45, 22, 2);
+//Durchmesser der Bohrung für Schraube
+bohrung=1.5;
 
-module crawlerbox(l, b, h)
+//Spalthöhe für Kabelduchführung
+kabelspalt=2;
+
+
+/* =================================================== */
+/* allgemeine Parameter, müssen nicht angepasst werden */
+
+eckradius=bohrung+0.5; //Radius der Eckzylinder
+space=1; //Lücke zwischen Inhalt und Wand
+platz=2*eckradius-wand+space; //Platz für Ecke
+il=l+(gummi+wand+space)+platz; //Innenlänge mit Platz
+ib=b+2*space;
+ih=h+space;
+$fn=50;
+
+
+/* =================================================== */
+/* main */
+crawlerbox();
+translate([0,-40,0]) 
+    crawlerboxdeckel();
+
+
+module crawlerbox()
 {
-    eckradius=2; //Radius der Eckzylinder
-    kabeldicke=1;
-    platz=2*eckradius-wand+0.5; //Platz für Ecke
-    il=l+2*platz; //Innenlänge mit Platz
-    ib=b+2*platz;
-    ih=h;
-    
-
     difference()
     {
         union()
@@ -34,8 +63,8 @@ module crawlerbox(l, b, h)
                 //Innenwürfel
                 translate([wand,wand,wand]) cube([il,ib,ih+wand]);
                 //Kabeldurchführung
-                translate([0,wand+2*eckradius,ih-2*kabeldicke]) 
-                    cube([wand,ib-4*eckradius,2*kabeldicke+wand]);
+                translate([0,wand+2*eckradius,ih-kabelspalt]) 
+                    cube([wand,ib-4*eckradius,kabelspalt+wand]);
                 //Platz für Deckel
                 translate([0,wand+eckradius,ih]) 
                     cube([wand,ib-2*eckradius,wand]);
@@ -49,13 +78,13 @@ module crawlerbox(l, b, h)
                     //Querbalken
                     translate([wand,wand,ih-gummi]) cube([gummi+wand,ib,gummi]);
                     //Anfang für Schräge
-                    translate([wand,wand,wand]) cube([wand, ib, ih-2*kabeldicke-gummi]);
+                    translate([wand,wand,wand]) cube([wand, ib, ih-kabelspalt-gummi]);
                 }
                 //Kabeldurchführung
-                translate([0,wand+2*eckradius,ih-2*kabeldicke]) 
-                    cube([2*wand+gummi,ib-4*eckradius,2*kabeldicke+wand]);
+                translate([0,wand+2*eckradius,ih-kabelspalt]) 
+                    cube([2*wand+gummi,ib-4*eckradius,kabelspalt+wand]);
                 //Rille für Dichtgummi
-                    translate([wand,wand+2*eckradius,ih-2*kabeldicke-wand]) 
+                    translate([wand,wand+2*eckradius,ih-kabelspalt-wand]) 
                         cube([gummi, ib-4*eckradius, gummi/2]);
             }
             
@@ -81,10 +110,10 @@ module crawlerbox(l, b, h)
             }
         }//end union
         //Eckbohrungen abziehen
-        eckbohrung(eckradius,eckradius, ih, 0.75, 7);
-        eckbohrung(il+2*wand-eckradius,eckradius, ih, 0.75, 7);
-        eckbohrung(eckradius,ib+2*wand-eckradius, ih, 0.75, 7);
-        eckbohrung(il+2*wand-eckradius,ib+2*wand-eckradius, ih, 0.75, 7);
+        eckbohrung(eckradius,eckradius, ih, bohrung/2, 7);
+        eckbohrung(il+2*wand-eckradius,eckradius, ih, bohrung/2, 7);
+        eckbohrung(eckradius,ib+2*wand-eckradius, ih, bohrung/2, 7);
+        eckbohrung(il+2*wand-eckradius,ib+2*wand-eckradius, ih, bohrung/2, 7);
     }
 }
 
@@ -101,11 +130,8 @@ module eckbohrung(x,y,h,lochradius,lochtiefe)
 }
 
 
-module crawlerboxdeckel(l, b, radius)
+module crawlerboxdeckel()
 {
-    platz=2*radius-wand+0.5;
-    laenge=l+2*platz; //Innenlänge mit Platz
-    breite=b+2*platz;
     luecke=0.5; //Lücke zwischen Innendeckel und Box
     
     difference()
@@ -113,19 +139,19 @@ module crawlerboxdeckel(l, b, radius)
         union()
         {
             //Deckel
-            cube([laenge+2*wand,breite+2*wand,wand]);
+            cube([il+2*wand,ib+2*wand,wand]);
             //Deckelinnenteil
-            translate([0,wand+luecke,wand]) cube(size=[laenge+wand-luecke,breite-2*luecke,wand]);
+            translate([0,wand+luecke,wand]) cube([il+wand-luecke,ib-2*luecke,wand]);
         }
         union()
         {
-            eckausschnitt(radius,radius,radius);
-            eckausschnitt(laenge+2*wand-radius,radius,radius);
-            eckausschnitt(radius,breite+2*wand-radius,radius);
-            eckausschnitt(laenge+2*wand-radius,breite+2*wand-radius,radius);
+            eckausschnitt(eckradius,eckradius,eckradius);
+            eckausschnitt(il+2*wand-eckradius,eckradius,eckradius);
+            eckausschnitt(eckradius,ib+2*wand-eckradius,eckradius);
+            eckausschnitt(il+2*wand-eckradius,ib+2*wand-eckradius,eckradius);
             //Rille für Dichtgummi
-            translate([wand,wand+2*radius,wand]) 
-                cube([gummi, breite-4*radius, gummi/2]);
+            translate([wand,wand+2*eckradius,wand]) 
+                cube([gummi, ib-4*eckradius, gummi/2]);
        }
     }    
 }
@@ -137,6 +163,6 @@ module eckausschnitt(x,y, radius)
         //Ausschnitt für Ecke
         translate([x,y,wand]) cylinder(h=wand,r=radius+0.75);
         //Bohrung für Schraube
-        translate([x,y,0]) cylinder(h=2*wand,r1=0.75);
+        translate([x,y,0]) cylinder(h=2*wand,r=0.75);
     }
 }
